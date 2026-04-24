@@ -1,5 +1,234 @@
+// --- 1. Supabase Initialization ---
+const SUPABASE_URL = 'https://abrxshzkgshklgmaztlp.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_EGPAkhdoARUwWv7Q2K2gVw_3PnwahcQ'; 
+
+let supabase = null;
+
+// Initialize Supabase ONLY when the library is ready
+function initSupabase() {
+    if (window.supabase) {
+        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        console.log('Supabase initialized successfully.');
+        fetchData();
+    } else {
+        console.error('Supabase library not found. Retrying in 500ms...');
+        setTimeout(initSupabase, 500);
+    }
+}
+
+// --- 2. Data Fetching ---
+async function fetchData() {
+    if (!supabase) return;
+    
+    try {
+        const [
+            { data: designs },
+            { data: websites },
+            { data: certificates },
+            { data: skills },
+            { data: partners },
+            { data: testimonials },
+            { data: knowledge }
+        ] = await Promise.all([
+            supabase.from('designs').select('*').order('id', { ascending: false }),
+            supabase.from('websites').select('*').order('id', { ascending: false }),
+            supabase.from('certificates').select('*').order('id', { ascending: false }),
+            supabase.from('skills').select('*').order('id', { ascending: true }),
+            supabase.from('partners').select('*').order('id', { ascending: true }),
+            supabase.from('testimonials').select('*').order('id', { ascending: false }),
+            supabase.from('chatbot_knowledge').select('*')
+        ]);
+
+        renderDesigns(designs);
+        renderWebsites(websites);
+        renderCertificates(certificates);
+        renderSkills(skills);
+        renderPartners(partners);
+        renderTestimonials(testimonials);
+        initChatbot(knowledge);
+
+    } catch (error) {
+        console.error('Error loading data from Supabase:', error);
+    }
+}
+
+// --- 3. Rendering Logic ---
+
+function renderDesigns(designs) {
+    const container = document.getElementById('design-slider-content');
+    const section = document.getElementById('design-section');
+    if (!designs || designs.length === 0) return;
+
+    section.classList.remove('hidden');
+    const itemsHtml = designs.map(d => `
+        <div class="design-slider-item">
+            <img src="${d.image_path}" alt="${d.title}" loading="lazy">
+        </div>
+    `).join('');
+    
+    container.innerHTML = itemsHtml + itemsHtml; 
+}
+
+function renderWebsites(websites) {
+    const container = document.getElementById('website-slider-content');
+    const section = document.getElementById('website-section');
+    if (!websites || websites.length === 0) return;
+
+    section.classList.remove('hidden');
+    const itemsHtml = websites.map(w => `
+        <div class="design-slider-item">
+            <img src="${w.image_path}" alt="${w.title}" loading="lazy">
+        </div>
+    `).join('');
+    
+    container.innerHTML = itemsHtml + itemsHtml;
+}
+
+function renderCertificates(certs) {
+    const container = document.getElementById('certificate-slider-content');
+    const section = document.getElementById('certificate-section');
+    const statsGrid = document.getElementById('cert-stats-grid');
+    if (!certs || certs.length === 0) return;
+
+    section.classList.remove('hidden');
+
+    const platforms = [
+        { name: 'Camy.id', count: 12, url: 'https://camy.id/', logo: 'Camy.id' },
+        { name: 'Dicoding', count: 90, url: 'https://www.dicoding.com/', logo: 'Dicoding' },
+        { name: 'Red Hat', count: 2, url: 'https://www.redhat.com/', logo: 'Red Hat' },
+        { name: 'MBKM', count: 2, url: 'https://kampusmerdeka.kemdikbud.go.id/', logo: 'MBKM' },
+        { name: 'IEEE', count: 1, url: 'https://www.ieee.org/', logo: 'IEEE' },
+        { name: 'Corisindo', count: 2, url: 'https://coris.or.id/', logo: 'Corisindo' }
+    ];
+
+    statsGrid.innerHTML = platforms.map(p => `
+        <div class="cert-stat-card">
+            <div class="cert-stat-content">
+                <div class="cert-stat-front">
+                    <div class="cert-stat-back-content">
+                        <div class="platform-logo"><h2>${p.logo}</h2></div>
+                        <div class="cert-count-display">
+                            <span class="count-num">${p.count}</span>
+                            <span class="count-label">Certificates</span>
+                        </div>
+                        <a href="${p.url}" target="_blank" class="visit-link">Visit Website</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+
+    const itemsHtml = certs.map(c => `
+        <div class="design-slider-item cert-item" data-title="${c.title.toLowerCase()}">
+            <div class="cert-card-inner">
+                ${c.platform ? `<div class="cert-badge">${c.platform}</div>` : ''}
+                <div class="cert-media-container">
+                    <img src="${c.image_path}" alt="${c.title}" loading="lazy">
+                    <a href="${c.image_path}" target="_blank" class="cert-view-btn">VIEW DOCUMENT</a>
+                </div>
+                <div class="cert-info-overlay">
+                    <h4>${c.title}</h4>
+                    <p>${c.description || ''}</p>
+                </div>
+            </div>
+        </div>
+    `).join('');
+    
+    container.innerHTML = itemsHtml + itemsHtml;
+}
+
+function renderSkills(skills) {
+    const container = document.getElementById('skills-content');
+    if (!skills) return;
+    const itemsHtml = skills.map(s => `
+        <div class="skill-item" title="${s.name}">
+            <img src="${s.icon_path}" alt="${s.name}">
+        </div>
+    `).join('');
+    container.innerHTML = itemsHtml + itemsHtml + itemsHtml;
+}
+
+function renderPartners(partners) { /* Logic... */ }
+
+function renderTestimonials(testimonials) {
+    const container = document.getElementById('testimonials-content');
+    if (!testimonials || testimonials.length === 0) return;
+
+    const list = testimonials.length > 3 ? testimonials : [
+        { name: "Briana Patton", role: "Manager", text: "Exceptional quality!", image_path: "https://randomuser.me/api/portraits/women/1.jpg" },
+        { name: "Bilal Ahmed", role: "CEO", text: "Fast and reliable service.", image_path: "https://randomuser.me/api/portraits/men/2.jpg" }
+    ];
+
+    const perCol = Math.ceil(list.length / 3);
+    const cols = [];
+    for (let i = 0; i < 3; i++) cols.push(list.slice(i * perCol, (i + 1) * perCol));
+
+    const durations = [15, 19, 17];
+    container.innerHTML = cols.map((col, idx) => `
+        <div class="testimonial-column" style="animation-duration: ${durations[idx]}s;">
+            ${[...col, ...col].map(t => `
+                <div class="testimonial-card">
+                    <p>${t.text}</p>
+                    <div class="testimonial-user">
+                        <img src="${t.image_path}" alt="${t.name}">
+                        <div class="testimonial-user-info">
+                            <h4>${t.name}</h4>
+                            <span>${t.role}</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    `).join('');
+}
+
+// --- 4. Chatbot Logic ---
+function initChatbot(knowledge) {
+    const chatBubble = document.getElementById('chatBubble');
+    const chatWindow = document.getElementById('chatWindow');
+    const closeChat = document.getElementById('closeChat');
+    const chatForm = document.getElementById('chatForm');
+    const chatInput = document.getElementById('chatInput');
+    const chatMessages = document.getElementById('chatMessages');
+
+    const botKnowledge = {};
+    if (knowledge) knowledge.forEach(k => botKnowledge[k.keyword.toLowerCase()] = k.response);
+
+    if (chatBubble) {
+        chatBubble.onclick = () => { chatWindow.style.display = 'flex'; chatBubble.style.display = 'none'; };
+        closeChat.onclick = () => { chatWindow.style.display = 'none'; chatBubble.style.display = 'flex'; };
+
+        chatForm.onsubmit = async (e) => {
+            e.preventDefault();
+            const text = chatInput.value.trim();
+            if (!text) return;
+            addMessage(text, 'user');
+            chatInput.value = '';
+            const lowerText = text.toLowerCase();
+            let response = "Maaf, saya tidak mengerti. Bisa coba kata kunci lain?";
+            for (let key in botKnowledge) {
+                if (lowerText.includes(key)) { response = botKnowledge[key]; break; }
+            }
+            addMessage(response, 'bot');
+        };
+
+        function addMessage(text, type) {
+            const msg = document.createElement('div');
+            msg.className = `message ${type}`;
+            msg.textContent = text;
+            chatMessages.appendChild(msg);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+    }
+}
+
+// --- 5. Core UI Initialization ---
 document.addEventListener('DOMContentLoaded', () => {
-    // 0. Premium Preloader
+    initUI();
+    initSupabase(); // Start trying to initialize Supabase
+});
+
+function initUI() {
     const preloader = document.getElementById('preloader');
     if (preloader) {
         window.addEventListener('load', () => {
@@ -10,278 +239,40 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 1. Mobile Menu Toggle
-    const menuToggle = document.getElementById('mobile-menu');
-    const navLinks = document.querySelector('.nav-links');
-
-    if (menuToggle) {
-        menuToggle.addEventListener('click', () => {
-            menuToggle.classList.toggle('active');
-            navLinks.classList.toggle('active');
-        });
-    }
-
-    // 2. Navbar Scroll Effect
     const nav = document.querySelector('.glass-nav');
     window.addEventListener('scroll', () => {
-        if (window.scrollY > 50) {
-            nav.classList.add('scrolled');
-        } else {
-            nav.classList.remove('scrolled');
-        }
+        if(nav) nav.classList.toggle('scrolled', window.scrollY > 50);
     });
 
-    // 3. Banner Slider
-    const slides = document.querySelectorAll('.slide');
-    if (slides.length > 1) {
-        let currentSlide = 0;
-        setInterval(() => {
-            slides[currentSlide].classList.remove('active');
-            currentSlide = (currentSlide + 1) % slides.length;
-            slides[currentSlide].classList.add('active');
-        }, 5000);
-    }
-
-    // 4. Scroll Reveal Animation (Enhanced)
-    const reveals = document.querySelectorAll('.reveal');
     const revealObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('active');
-                // Unobserve after revealing to save resources
-                // revealObserver.unobserve(entry.target); 
-            }
+            if (entry.isIntersecting) entry.target.classList.add('active');
         });
-    }, {
-        threshold: 0.15,
-        rootMargin: '0px 0px -50px 0px'
-    });
+    }, { threshold: 0.15 });
+    document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
 
-    reveals.forEach(el => revealObserver.observe(el));
+    initScramble();
+}
 
-    // 5. Project Filtering
-    const filterBtns = document.querySelectorAll('.filter-btn');
-    const projectCards = document.querySelectorAll('.card[data-category]');
-
-    filterBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            // Update active button
-            filterBtns.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-
-            const filter = btn.getAttribute('data-filter');
-
-            projectCards.forEach(card => {
-                const category = card.getAttribute('data-category');
-                if (filter === 'all' || category === filter) {
-                    card.style.display = 'block';
-                    setTimeout(() => card.style.opacity = '1', 10);
-                } else {
-                    card.style.opacity = '0';
-                    setTimeout(() => card.style.display = 'none', 300);
-                }
-            });
-        });
-    });
-
-    // 6. Lightbox Functionality
-    const lightbox = document.getElementById('lightbox');
-    const lightboxImg = lightbox.querySelector('img');
-    const triggerImgs = document.querySelectorAll('.card-img img');
-
-    triggerImgs.forEach(img => {
-        img.addEventListener('click', (e) => {
-            // Prevent lightbox for website visit buttons
-            if (e.target.closest('.visit-btn')) return;
-
-            lightboxImg.src = img.src;
-            lightbox.style.display = 'flex';
-            document.body.style.overflow = 'hidden'; // Stop scroll
-        });
-    });
-
-    // 7. Back to Top & Section Progress
-    const backToTop = document.getElementById('backToTop');
-    const progressBar = document.querySelector('.scroll-progress-bar');
-    
-    window.addEventListener('scroll', () => {
-        // Back to Top visibility
-        if (window.scrollY > 400) {
-            backToTop.classList.add('active');
-        } else {
-            backToTop.classList.remove('active');
-        }
-
-        // Progress Bar logic
-        const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
-        const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
-        const scrolled = (winScroll / height) * 100;
-        if (progressBar) {
-            progressBar.style.height = scrolled + "%";
-        }
-    });
-
-    backToTop.addEventListener('click', () => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    });
-
-    // Chatbot logic
-    const chatBubble = document.getElementById('chatBubble');
-    const chatWindow = document.getElementById('chatWindow');
-    const closeChat = document.getElementById('closeChat');
-    const chatForm = document.getElementById('chatForm');
-    const chatInput = document.getElementById('chatInput');
-    const chatMessages = document.getElementById('chatMessages');
-
-    if (chatBubble) {
-        chatBubble.addEventListener('click', () => {
-            chatWindow.style.display = 'flex';
-            chatBubble.style.display = 'none';
-        });
-
-        closeChat.addEventListener('click', () => {
-            chatWindow.style.display = 'none';
-            chatBubble.style.display = 'flex';
-        });
-
-        const botResponses = window.BOT_KNOWLEDGE || {};
-
-        const getBotResponse = async (input) => {
-            const lowerInput = input.toLowerCase();
-            
-            // 1. PRIMARY: Exact/Phrase match from local Keyword-Response settings
-            for (let key in botResponses) {
-                if (lowerInput.includes(key.toLowerCase())) {
-                    return botResponses[key];
-                }
-            }
-
-            // 2. SECONDARY: Try AI if no local match
-            try {
-                const res = await fetch('includes/chat_ai.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: input })
-                });
-                
-                if (!res.ok) throw new Error('AI Offline');
-                const data = await res.json();
-                if (data.error || !data.response) throw new Error('AI Error');
-                
-                return data.response;
-            } catch (err) {
-                // 3. FALLBACK: Transition to Local Keyword Search if AI fails
-                // Try to find ANY related keyword to help the user
-                let suggestions = [];
-                for (let key in botResponses) {
-                    if (suggestions.length < 3) suggestions.push(`'${key}'`);
-                }
-                
-                return `Maaf, saya sedang dalam mode hemat energi (AI Offline). Namun, saya bisa menjawab jika Anda bertanya tentang: ${suggestions.join(', ')}.`;
-            }
-        };
-
-        const addMessage = (text, type) => {
-            const msg = document.createElement('div');
-            msg.className = `message ${type}`;
-            msg.textContent = text;
-            chatMessages.appendChild(msg);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        };
-
-        chatForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const text = chatInput.value.trim();
-            if (!text) return;
-
-            addMessage(text, 'user');
-            chatInput.value = '';
-
-            // Loading indicator
-            const loading = document.createElement('div');
-            loading.className = 'message bot';
-            loading.textContent = 'Mengetik...';
-            chatMessages.appendChild(loading);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-
-            const response = await getBotResponse(text);
-            loading.remove();
-            addMessage(response, 'bot');
-        });
-    }
-
-    // 9. Text Scramble Animation
+function initScramble() {
     const CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%&*";
-    const scrambleElements = document.querySelectorAll('.text-scramble-wrapper');
-
-    scrambleElements.forEach(wrapper => {
+    document.querySelectorAll('.text-scramble-wrapper').forEach(wrapper => {
         const textEl = wrapper.querySelector('.scramble-text');
         if (!textEl) return;
-
         const originalText = textEl.innerText;
-        let isScrambling = false;
-        let interval = null;
-
-        const scramble = () => {
-            if (isScrambling) return;
-            isScrambling = true;
-
+        wrapper.onmouseenter = () => {
             let frame = 0;
             const duration = originalText.length * 3;
-
-            if (interval) clearInterval(interval);
-
-            interval = setInterval(() => {
+            const interval = setInterval(() => {
                 frame++;
                 const progress = frame / duration;
                 const revealedLength = Math.floor(progress * originalText.length);
-
-                const result = originalText.split('').map((char, i) => {
+                textEl.innerText = originalText.split('').map((char, i) => {
                     if (char === ' ') return ' ';
-                    if (i < revealedLength) return originalText[i];
-                    return CHARS[Math.floor(Math.random() * CHARS.length)];
+                    return i < revealedLength ? originalText[i] : CHARS[Math.floor(Math.random() * CHARS.length)];
                 }).join('');
-
-                textEl.innerText = result;
-
-                if (frame >= duration) {
-                    clearInterval(interval);
-                    textEl.innerText = originalText;
-                    isScrambling = false;
-                }
+                if (frame >= duration) clearInterval(interval);
             }, 30);
         };
-
-        wrapper.addEventListener('mouseenter', scramble);
     });
-});
-
-// --- Project Filter (Slider Toggle) ---
-document.addEventListener('DOMContentLoaded', () => {
-    const filterBtns = document.querySelectorAll('.filter-btn[data-filter]');
-    const sliderSections = document.querySelectorAll('.design-slider-section[data-category]');
-
-    filterBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            // Update active state
-            filterBtns.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-
-            const filter = btn.dataset.filter;
-
-            sliderSections.forEach(section => {
-                if (filter === 'all' || section.dataset.category === filter) {
-                    section.style.display = '';
-                    section.style.opacity = '1';
-                    section.style.transform = 'translateY(0)';
-                } else {
-                    section.style.opacity = '0';
-                    section.style.transform = 'translateY(20px)';
-                    setTimeout(() => {
-                        section.style.display = 'none';
-                    }, 300);
-                }
-            });
-        });
-    });
-});
+}
