@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | Stormbreaker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #f59e0b; --bg: #09090b; --card: #09090b; --border: #27272a; }
+        body { background-color: var(--bg); color: #fafafa; font-family: 'Inter', sans-serif; }
+        .sidebar { border-right: 1px solid var(--border); background: #09090b; }
+        .nav-item { transition: all 0.2s; color: #a1a1aa; cursor: pointer; }
+        .nav-item:hover, .nav-item.active { background: #18181b; color: #fff; border-left: 2px solid var(--primary); }
+        .glass-table { border: 1px solid var(--border); border-radius: 0.75rem; overflow: hidden; background: #09090b; }
+        .btn-primary { background: #fafafa; color: #09090b; font-weight: 600; padding: 0.5rem 1rem; border-radius: 0.5rem; transition: opacity 0.2s; }
+        .btn-primary:hover { opacity: 0.9; }
+        .modal { backdrop-filter: blur(8px); }
+        .input-dark { background: transparent; border: 1px solid var(--border); color: white; padding: 0.6rem 0.8rem; border-radius: 0.5rem; outline: none; transition: border 0.2s; }
+        .input-dark:focus { border-color: var(--primary); }
+        tr { border-bottom: 1px solid var(--border); }
+        tr:last-child { border-bottom: none; }
+        .img-preview { width: 44px; height: 44px; border-radius: 8px; border: 1px solid var(--border); object-fit: cover; }
+    </style>
+</head>
+<body class="flex min-h-screen">
+    <!-- Sidebar -->
+    <aside class="sidebar w-64 flex flex-col p-6 space-y-8">
+        <div class="flex items-center gap-3 px-2">
+            <div class="w-8 h-8 bg-amber-500 rounded-lg flex items-center justify-center text-black font-black">S</div>
+            <h2 class="text-lg font-bold tracking-tight uppercase font-mono">Vault_Access</h2>
+        </div>
+        
+        <nav class="flex-1 space-y-1">
+            <p class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest px-2 mb-2">Content Control</p>
+            <div class="nav-item active flex items-center gap-3 p-3 rounded-md" onclick="showTab('designs', this)"><i data-lucide="palette" class="w-4 h-4"></i> Designs</div>
+            <div class="nav-item flex items-center gap-3 p-3 rounded-md" onclick="showTab('websites', this)"><i data-lucide="globe" class="w-4 h-4"></i> Websites</div>
+            <div class="nav-item flex items-center gap-3 p-3 rounded-md" onclick="showTab('award" class="w-4 h-4"></i> Certificates</div>
+            <div class="nav-item flex items-center gap-3 p-3 rounded-md" onclick="showTab('zap', this)"><i data-lucide="zap" class="w-4 h-4"></i> Skills</div>
+            <div class="nav-item flex items-center gap-3 p-3 rounded-md" onclick="showTab('bot', this)"><i data-lucide="bot" class="w-4 h-4"></i> Chatbot AI</div>
+            
+            <div class="pt-10">
+                <p class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest px-2 mb-2">System</p>
+                <div class="nav-item flex items-center gap-3 p-3 rounded-md text-red-500" onclick="logout()"><i data-lucide="log-out" class="w-4 h-4"></i> Logout</div>
+            </div>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 p-10 bg-[#09090b]">
+        <header class="flex justify-between items-center mb-10">
+            <div>
+                <h1 id="tab-title" class="text-3xl font-bold tracking-tight text-white capitalize">Designs</h1>
+                <p class="text-zinc-400 text-sm">Manage your portfolio showcase and visual assets.</p>
+            </div>
+            <button class="btn-primary flex items-center gap-2" onclick="openModal()"><i data-lucide="plus" class="w-4 h-4"></i> Add Entry</button>
+        </header>
+
+        <!-- Stats Overview (Mockup) -->
+        <div class="grid grid-cols-3 gap-6 mb-10">
+            <div class="p-6 rounded-xl border border-[#27272a] bg-[#09090b]">
+                <p class="text-xs text-zinc-400 uppercase tracking-wider mb-1">Status</p>
+                <h3 class="text-xl font-bold text-green-400">System Online</h3>
+            </div>
+            <div class="p-6 rounded-xl border border-[#27272a] bg-[#09090b]">
+                <p class="text-xs text-zinc-400 uppercase tracking-wider mb-1">Database</p>
+                <h3 class="text-xl font-bold text-white">Supabase Linked</h3>
+            </div>
+            <div class="p-6 rounded-xl border border-[#27272a] bg-[#09090b]">
+                <p class="text-xs text-zinc-400 uppercase tracking-wider mb-1">Identity</p>
+                <h3 class="text-xl font-bold text-white uppercase font-mono" id="admin-name">Admin</h3>
+            </div>
+        </div>
+
+        <!-- Data Table -->
+        <div class="glass-table">
+            <table class="w-full text-left">
+                <thead class="bg-zinc-900/50 text-xs font-medium text-zinc-500 uppercase tracking-wider">
+                    <tr id="table-head"></tr>
+                </thead>
+                <tbody id="table-body" class="text-sm">
+                    <!-- Loaded via JS -->
+                </tbody>
+            </table>
+            <div id="loading-spinner" class="p-20 text-center text-zinc-500">Loading data from vault...</div>
+        </div>
+    </main>
+
+    <!-- Modern Modal -->
+    <div id="dataModal" class="modal fixed inset-0 z-50 hidden flex items-center justify-center bg-black/60">
+        <div class="bg-[#09090b] border border-[#27272a] w-full max-w-md p-8 rounded-2xl shadow-2xl">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold">Add New Record</h2>
+                <button onclick="closeModal()" class="text-zinc-500 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form id="dataForm" class="space-y-4">
+                <div id="form-fields" class="flex flex-col space-y-4"></div>
+                <div class="pt-4 flex gap-3">
+                    <button type="submit" class="btn-primary flex-1">Save to Database</button>
+                    <button type="button" onclick="closeModal()" class="flex-1 text-zinc-400 font-medium">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="../assets/js/supabase_lib.js"></script>
+    <script>
+        const SUPABASE_URL = 'https://abrxshzkgshklgmaztlp.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_EGPAkhdoARUwWv7Q2K2gVw_3PnwahcQ';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let currentTab = 'designs';
+
+        // 1. Auth & Meta
+        async function checkAuth() {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) window.location.href = 'login.html';
+            else document.getElementById('admin-name').innerText = session.user.email.split('@')[0];
+        }
+        checkAuth();
+
+        // 2. Tab Controller
+        function showTab(tab, el) {
+            currentTab = tab;
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            el.classList.add('active');
+            document.getElementById('tab-title').innerText = tab;
+            loadData();
+        }
+
+        // 3. Data Loader
+        async function loadData() {
+            const spinner = document.getElementById('loading-spinner');
+            const tbody = document.getElementById('table-body');
+            const thead = document.getElementById('table-head');
+            
+            spinner.classList.remove('hidden');
+            tbody.innerHTML = '';
+
+            const { data, error } = await supabase.from(currentTab).select('*').order('id', { ascending: false });
+            spinner.classList.add('hidden');
+            
+            if (error) return alert(error.message);
+
+            // Headers
+            let headers = ['Project Name', 'Preview', 'Action'];
+            if (currentTab === 'skills') headers = ['Skill', 'Icon', 'Action'];
+            if (currentTab === 'chatbot_knowledge') headers = ['Keyword', 'Response', 'Action'];
+            thead.innerHTML = headers.map(h => `<th class="p-4">${h}</th>`).join('');
+
+            // Rows
+            tbody.innerHTML = data.map(item => `
+                <tr class="hover:bg-zinc-900/30 transition-colors">
+                    <td class="p-4 font-medium text-white">${item.title || item.name || item.keyword}</td>
+                    <td class="p-4">
+                        ${item.image_path || item.icon_path ? 
+                          `<img src="${item.image_path || item.icon_path}" class="img-preview">` : 
+                          `<span class="text-zinc-500 italic truncate block max-w-xs">${item.response || '-'}</span>`}
+                    </td>
+                    <td class="p-4">
+                        <button onclick="deleteItem(${item.id})" class="text-red-500 hover:text-red-400 font-medium">Delete</button>
+                    </td>
+                </tr>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        // 4. CRUD
+        async function deleteItem(id) {
+            if (!confirm('Access check: Confirm deletion?')) return;
+            const { error } = await supabase.from(currentTab).delete().eq('id', id);
+            if (error) alert(error.message);
+            else loadData();
+        }
+
+        function openModal() {
+            const fields = document.getElementById('form-fields');
+            let html = `
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs text-zinc-500">DISPLAY NAME</label>
+                    <input type="text" name="title" class="input-dark" placeholder="Project Title" required>
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs text-zinc-500">MEDIA URL (SUPABASE STORAGE)</label>
+                    <input type="text" name="image_path" class="input-dark" placeholder="https://..." required>
+                </div>`;
+            
+            if (currentTab === 'skills') {
+                html = `
+                    <input type="text" name="name" class="input-dark" placeholder="Skill Name" required>
+                    <input type="text" name="icon_path" class="input-dark" placeholder="Icon URL" required>`;
+            } else if (currentTab === 'chatbot_knowledge') {
+                html = `
+                    <input type="text" name="keyword" class="input-dark" placeholder="User Keyword" required>
+                    <textarea name="response" class="input-dark" rows="3" placeholder="AI Response" required></textarea>`;
+            }
+
+            fields.innerHTML = html;
+            document.getElementById('dataModal').classList.remove('hidden');
+        }
+
+        function closeModal() { document.getElementById('dataModal').classList.add('hidden'); }
+
+        document.getElementById('dataForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const obj = {};
+            formData.forEach((value, key) => obj[key] = value);
+
+            const { error } = await supabase.from(currentTab).insert([obj]);
+            if (error) alert(error.message);
+            else { closeModal(); loadData(); }
+        };
+
+        async function logout() {
+            await supabase.auth.signOut();
+            window.location.href = 'login.html';
+        }
+
+        // Init
+        loadData();
+        lucide.createIcons();
+    </script>
+</body>
+</html>

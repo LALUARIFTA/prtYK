@@ -5,35 +5,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Stormbreaker Portfolio | Modern Showcase</title>
-    <meta name="description" content="A premium showcase of designs and website projects by Stormbreaker.">
+    <meta name="description" content="A premium showcase of designs and website projects by Stormbreaker. High-fidelity UI/UX and networking solutions.">
 
     <!-- Open Graph / Social Media -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://prtyk.pages.dev">
     <meta property="og:title" content="Stormbreaker Portfolio | Modern Showcase">
     <meta property="og:description" content="A premium showcase of designs and website projects by Stormbreaker.">
-    <meta property="og:image"
-        content="https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&q=80&w=1200">
+    <meta property="og:image" content="https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&q=80&w=1200">
 
     <link rel="stylesheet" href="assets/css/style.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
-            corePlugins: {
-                preflight: false,
-            }
+            corePlugins: { preflight: false },
+            theme: { extend: { colors: { primary: '#f59e0b' } } }
         }
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@300;400;700&display=swap"
-        rel="stylesheet">
-    
-    <!-- Supabase SDK -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@300;400;700&display=swap" rel="stylesheet">
 </head>
 
-<body class="dark">
+<body class="dark overflow-x-hidden">
     <!-- UI/UX Enhancement Layers -->
     <div class="scroll-progress-container">
         <div class="scroll-progress-bar"></div>
@@ -61,9 +55,7 @@
         <div class="container nav-container">
             <a href="index.html" class="logo text-scramble-wrapper">
                 <span class="scramble-text" data-scramble>STORM BREAKER</span>
-                <div class="scramble-underline">
-                    <div class="scramble-underline-fill"></div>
-                </div>
+                <div class="scramble-underline"><div class="scramble-underline-fill"></div></div>
             </a>
             <div class="nav-links">
                 <a href="#projects">Works</a>
@@ -71,9 +63,7 @@
                 <a href="admin/login.html" class="admin-link">Login Admin</a>
             </div>
             <div class="menu-toggle" id="mobile-menu">
-                <span></span>
-                <span></span>
-                <span></span>
+                <span></span><span></span><span></span>
             </div>
         </div>
     </header>
@@ -83,14 +73,7 @@
         <section id="projects" class="section" style="padding-bottom: 0; margin-top: 8rem;">
             <div class="outline-title">
                 WORKS
-                <svg class="dot-pattern">
-                    <defs>
-                        <pattern id="dots-works" width="20" height="20" patternUnits="userSpaceOnUse">
-                            <circle cx="2" cy="2" r="1" />
-                        </pattern>
-                    </defs>
-                    <rect width="100%" height="100%" fill="url(#dots-works)" />
-                </svg>
+                <svg class="dot-pattern"><rect width="100%" height="100%" fill="url(#dots-works)" /></svg>
             </div>
             <div class="filter-container reveal">
                 <button class="filter-btn active" data-filter="all">All Projects</button>
@@ -100,89 +83,54 @@
             </div>
         </section>
 
-        <!-- Design Slider -->
+        <!-- Sliders Populated by main.js -->
         <section id="design-section" class="design-slider-section reveal hidden" data-category="design">
-            <div style="max-width: 1200px; margin: 0 auto; padding: 0 2rem 1rem;">
-                <span style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--primary); letter-spacing: 3px; text-transform: uppercase;">// Design Projects</span>
-            </div>
-            <div class="design-slider-container">
-                <div class="design-infinite-scroll" id="design-slider-content"></div>
-            </div>
+            <div class="section-label"><span>// Design Projects</span></div>
+            <div class="design-slider-container"><div class="design-infinite-scroll" id="design-slider-content"></div></div>
         </section>
 
-        <!-- Website Slider -->
-        <section id="website-section" class="design-slider-section reveal hidden" data-category="website" style="border-top: none; padding-top: 0; padding-bottom: 5rem;">
-            <div style="max-width: 1200px; margin: 0 auto; padding: 0 2rem 1rem;">
-                <span style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--primary); letter-spacing: 3px; text-transform: uppercase;">// Website Projects</span>
-            </div>
-            <div class="design-slider-container">
-                <div class="design-infinite-scroll" id="website-slider-content"></div>
-            </div>
+        <section id="website-section" class="design-slider-section reveal hidden" data-category="website">
+            <div class="section-label"><span>// Website Projects</span></div>
+            <div class="design-slider-container"><div class="design-infinite-scroll" id="website-slider-content"></div></div>
         </section>
 
-        <!-- Certificates Slider -->
-        <section id="certificate-section" class="design-slider-section reveal hidden" data-category="certificate" style="border-top: none; padding-top: 0; padding-bottom: 5rem;">
-            <div style="max-width: 1200px; margin: 0 auto; padding: 0 2rem 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-                <span style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--primary); letter-spacing: 3px; text-transform: uppercase;">// Certificates</span>
-                <input type="text" id="certSearch" placeholder="Search certificates..." style="background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: white; padding: 0.5rem 1rem; border-radius: 0.25rem; outline: none; font-family: var(--font-mono); font-size: 0.8rem; width: 100%; max-width: 300px;">
+        <section id="certificate-section" class="design-slider-section reveal hidden" data-category="certificate">
+            <div class="section-header-flex">
+                <span class="section-label">// Certificates</span>
+                <input type="text" id="certSearch" placeholder="Search certificates...">
             </div>
-            
             <div class="cert-grid-container reveal" id="cert-stats-grid"></div>
-
-            <div class="design-slider-container">
-                <div class="design-infinite-scroll" id="certificate-slider-content"></div>
-            </div>
+            <div class="design-slider-container"><div class="design-infinite-scroll" id="certificate-slider-content"></div></div>
         </section>
 
-        <!-- About & Skills -->
+        <!-- About Section -->
         <section id="about" class="section">
             <div class="outline-title">ABOUT</div>
-            <div class="container">
-                <div class="about-grid" style="margin-top: -2rem;">
-                    <div class="about-img reveal">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 614 390" height="390" width="614">
-                            <!-- SVG Content matches index.php -->
-                             <use href="#Frame"></use>
-                        </svg>
-                        <!-- Include the SVG Frame definition from index.php here if needed, or keep the full SVG -->
-                    </div>
-                    <div class="about-text">
-                        <h3 class="reveal"><span class="glitch-text" data-text="Building">Building</span> Digital <span class="amber-text">Experience</span></h3>
-                        <p class="reveal staggered-text">I am a passionate designer and developer focused on creating <span>premium</span> digital experiences that blend <span>aesthetics</span> with <span>functionality</span>.</p>
-                        
-                        <div class="reveal" style="margin-top: 2rem;">
-                            <p style="text-shadow: none; font-size: 0.6rem; letter-spacing: 0.4em; color: var(--primary); margin-bottom: 0.5rem; border: none; padding: 0;">HOVER TO DECODE</p>
-                            <div class="text-scramble-wrapper">
-                                <span class="scramble-text" data-scramble>EXPLORE PROJECTS</span>
-                                <div class="scramble-underline"><div class="scramble-underline-fill"></div></div>
-                                <div class="scramble-glow"></div>
-                            </div>
-                        </div>
-
-                        <div class="about-skills" id="skills-marquee-container">
-                            <div class="marquee">
-                                <div class="marquee-content" id="skills-content"></div>
-                            </div>
-                        </div>
+            <div class="about-grid">
+                <div class="about-img reveal">
+                    <!-- Standard placeholder for complex SVG defined in CSS/main.js -->
+                    <div id="hero-svg-placeholder"></div>
+                </div>
+                <div class="about-text">
+                    <h3 class="reveal"><span class="glitch-text" data-text="Building">Building</span> Digital Experience</h3>
+                    <p class="reveal staggered-text">Creating <span>premium</span> digital experiences that blend <span>aesthetics</span> with <span>functionality</span>.</p>
+                    <div class="about-skills" id="skills-marquee-container">
+                        <div class="marquee"><div class="marquee-content" id="skills-content"></div></div>
                     </div>
                 </div>
             </div>
         </section>
 
         <!-- Networking Section -->
-        <section id="networking" class="section reveal" style="padding-top: 0; margin-top: -3rem;">
+        <section id="networking" class="section reveal">
             <div class="outline-title">NETWORKING</div>
-            <div class="container">
-                <div class="about-grid" style="margin-top: -2rem; align-items: center;">
-                    <div class="about-img reveal active" id="networking-svg-container"></div>
-                    <div class="about-text">
-                        <div class="section-header" style="text-align: left;">
-                            <h2 class="reveal"><span class="glitch-text" data-text="Networking">Networking</span> & IT Support</h2>
-                            <p class="reveal staggered-text" style="margin-top: 1rem; opacity: 0.75; line-height: 1.8;">
-                                <span>Menyediakan</span> solusi infrastruktur jaringan yang <span>andal</span> dan layanan dukungan TI yang <span>komprehensif</span>.
-                            </p>
-                        </div>
-                    </div>
+            <div class="about-grid">
+                <div class="about-img reveal active" id="networking-svg-container">
+                    <!-- The Animated SVG will be injected here for cleaner HTML -->
+                </div>
+                <div class="about-text">
+                    <h2 class="reveal"><span class="glitch-text" data-text="Networking">Networking</span> & IT Support</h2>
+                    <p class="reveal staggered-text">Infrastruktur jaringan <span>andal</span> dan layanan dukungan TI yang <span>komprehensif</span>.</p>
                 </div>
             </div>
         </section>
@@ -190,48 +138,26 @@
         <!-- Feedback Section -->
         <section id="feedback" class="testimonials-section section reveal">
             <div class="outline-title">FEEDBACK</div>
-            <div class="container">
-                <div class="section-header" style="text-align: center;">
-                    <h2 style="font-size: 2.5rem; font-weight: 800;">What our users <span>say</span></h2>
-                </div>
-                <div class="testimonials-mask" id="testimonials-content"></div>
-            </div>
+            <div class="testimonials-mask" id="testimonials-content"></div>
         </section>
     </main>
 
     <footer class="footer">
-        <div class="container">
-            <p>&copy; <span id="current-year"></span> Stormbreaker Portfolio. All rights reserved.</p>
-        </div>
+        <div class="container"><p>&copy; <span id="current-year"></span> Stormbreaker Portfolio. All rights reserved.</p></div>
     </footer>
 
-    <!-- Chatbot Widget -->
+    <!-- Chatbot -->
     <div class="chatbot-container">
-        <button class="chat-bubble" id="chatBubble">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="m3 21 1.9-5.7a8.5 8.5 0 1 1 3.8 3.8z" />
-            </svg>
-        </button>
+        <button class="chat-bubble" id="chatBubble">💬</button>
         <div class="chat-window" id="chatWindow">
-            <div class="chat-header">
-                <strong>Stormbreaker AI</strong>
-                <button id="closeChat">&times;</button>
-            </div>
-            <div class="chat-messages" id="chatMessages">
-                <div class="message bot">Halo! Saya Stormbreaker AI. Ada yang bisa saya bantu?</div>
-            </div>
-            <form class="chat-input" id="chatForm">
-                <input type="text" id="chatInput" placeholder="Tanyakan sesuatu..." autocomplete="off">
-                <button type="submit">SEND</button>
-            </form>
+            <div class="chat-header"><strong>Stormbreaker AI</strong><button id="closeChat">&times;</button></div>
+            <div class="chat-messages" id="chatMessages"></div>
+            <form class="chat-input" id="chatForm"><input type="text" id="chatInput" placeholder="Ask me..."><button type="submit">></button></form>
         </div>
     </div>
 
-    <!-- Supabase Library (Local Fallback) -->
+    <!-- Scripts -->
     <script src="assets/js/supabase_lib.js"></script>
     <script src="assets/js/main.js" defer></script>
-    <script>
-        document.getElementById('current-year').textContent = new Date().getFullYear();
-    </script>
 </body>
 </html>
