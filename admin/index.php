@@ -18,8 +18,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'upload_banner') {
         $path = secure_upload($_FILES['image'], 'banners');
         if ($path) {
-            $stmt = $pdo->prepare("INSERT INTO banners (image_path, title, subtitle) VALUES (?, ?, ?)");
-            $stmt->execute([$path, $_POST['title'], $_POST['subtitle']]);
+            $data = ['image_path' => $path, 'title' => $_POST['title'], 'subtitle' => $_POST['subtitle']];
+            $supabase->insert('banners', $data);
             set_toast('Banner uploaded successfully');
             redirect('index.php');
         } else {
@@ -28,8 +28,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($action === 'upload_design') {
         $path = secure_upload($_FILES['image'], 'designs');
         if ($path) {
-            $stmt = $pdo->prepare("INSERT INTO designs (image_path, title, description) VALUES (?, ?, ?)");
-            $stmt->execute([$path, $_POST['title'], $_POST['description']]);
+            $data = ['image_path' => $path, 'title' => $_POST['title'], 'description' => $_POST['description']];
+            $supabase->insert('designs', $data);
             set_toast('Design project uploaded successfully');
             redirect('index.php');
         } else {
@@ -38,8 +38,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($action === 'upload_website') {
         $path = secure_upload($_FILES['image'], 'websites');
         if ($path) {
-            $stmt = $pdo->prepare("INSERT INTO websites (image_path, title, url, description) VALUES (?, ?, ?, ?)");
-            $stmt->execute([$path, $_POST['title'], $_POST['url'], $_POST['description']]);
+            $data = ['image_path' => $path, 'title' => $_POST['title'], 'url' => $_POST['url'], 'description' => $_POST['description']];
+            $supabase->insert('websites', $data);
             set_toast('Website project uploaded successfully');
             redirect('index.php');
         } else {
@@ -48,8 +48,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($action === 'upload_certificate') {
         $path = secure_upload($_FILES['image'], 'certificates');
         if ($path) {
-            $stmt = $pdo->prepare("INSERT INTO certificates (image_path, title, description, platform) VALUES (?, ?, ?, ?)");
-            $stmt->execute([$path, $_POST['title'], $_POST['description'], $_POST['platform']]);
+            $data = ['image_path' => $path, 'title' => $_POST['title'], 'description' => $_POST['description'], 'platform' => $_POST['platform']];
+            $supabase->insert('certificates', $data);
             set_toast('Certificate uploaded successfully');
             redirect('index.php');
         } else {
@@ -58,75 +58,58 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($action === 'upload_skill') {
         $path = secure_upload($_FILES['icon'], 'skills');
         if ($path) {
-            $stmt = $pdo->prepare("INSERT INTO skills (name, icon_path) VALUES (?, ?)");
-            $stmt->execute([$_POST['name'], $path]);
+            $data = ['name' => $_POST['name'], 'icon_path' => $path];
+            $supabase->insert('skills', $data);
             set_toast('Skill added successfully');
             redirect('index.php');
         } else {
             $err = 'Failed to upload skill icon.';
         }
     } elseif ($action === 'add_knowledge') {
-        $stmt = $pdo->prepare("INSERT INTO chatbot_knowledge (keyword, response) VALUES (?, ?)");
-        $stmt->execute([$_POST['keyword'], $_POST['response']]);
+        $data = ['keyword' => $_POST['keyword'], 'response' => $_POST['response']];
+        $supabase->insert('chatbot_knowledge', $data);
         set_toast('Knowledge added successfully');
         redirect('index.php');
     } elseif ($action === 'update_api_key') {
-        $stmt = $pdo->prepare("INSERT OR REPLACE INTO settings (key_name, key_value) VALUES ('ai_provider', ?)");
-        $stmt->execute([$_POST['provider']]);
-        $stmt = $pdo->prepare("INSERT OR REPLACE INTO settings (key_name, key_value) VALUES ('ai_api_key', ?)");
-        $stmt->execute([$_POST['api_key']]);
+        $supabase->update('settings', ['key_value' => $_POST['provider']], 'key_name', 'ai_provider');
+        $supabase->update('settings', ['key_value' => $_POST['api_key']], 'key_name', 'ai_api_key');
         set_toast('AI Settings updated successfully');
         redirect('index.php');
     } elseif ($action === 'upload_partner') {
         $path = secure_upload($_FILES['logo'], 'partners');
         if ($path) {
-            $stmt = $pdo->prepare("INSERT INTO partners (name, logo_path) VALUES (?, ?)");
-            $stmt->execute([$_POST['name'], $path]);
+            $data = ['name' => $_POST['name'], 'logo_path' => $path];
+            $supabase->insert('partners', $data);
             set_toast('Partner added successfully');
         }
         redirect('index.php');
     } elseif ($action === 'delete_partner') {
-        $id = (int)$_POST['id'];
-        $stmt = $pdo->prepare("SELECT logo_path FROM partners WHERE id = ?");
-        $stmt->execute([$id]);
-        $path = $stmt->fetchColumn();
-        if ($path) @unlink('../' . $path);
-
-        $stmt = $pdo->prepare("DELETE FROM partners WHERE id = ?");
-        $stmt->execute([$id]);
+        $id = (int) $_POST['id'];
+        $item = $supabase->querySingle('partners', 'id', $id);
+        if ($item && $item['logo_path']) @unlink('../' . $item['logo_path']);
+        $supabase->delete('partners', 'id', $id);
         set_toast('Partner deleted');
         redirect('index.php');
     } elseif ($action === 'upload_testimonial') {
         $path = secure_upload($_FILES['image'], 'testimonials');
         if ($path) {
-            $stmt = $pdo->prepare("INSERT INTO testimonials (name, role, text, image_path) VALUES (?, ?, ?, ?)");
-            $stmt->execute([$_POST['name'], $_POST['role'], $_POST['text'], $path]);
+            $data = ['name' => $_POST['name'], 'role' => $_POST['role'], 'text' => $_POST['text'], 'image_path' => $path];
+            $supabase->insert('testimonials', $data);
             set_toast('Testimonial added successfully');
         } else {
             set_toast('Failed to upload testimonial image.', 'error');
         }
         redirect('index.php');
     } elseif ($action === 'delete_testimonial') {
-        $id = (int)$_POST['id'];
-        $stmt = $pdo->prepare("SELECT image_path FROM testimonials WHERE id = ?");
-        $stmt->execute([$id]);
-        $path = $stmt->fetchColumn();
-        if ($path) @unlink('../' . $path);
-
-        $stmt = $pdo->prepare("DELETE FROM testimonials WHERE id = ?");
-        $stmt->execute([$id]);
+        $id = (int) $_POST['id'];
+        $item = $supabase->querySingle('testimonials', 'id', $id);
+        if ($item && $item['image_path']) @unlink('../' . $item['image_path']);
+        $supabase->delete('testimonials', 'id', $id);
         set_toast('Testimonial deleted');
         redirect('index.php');
     } elseif ($action === 'edit') {
         $type = $_POST['type'];
-        $id = (int)$_POST['id'];
-        $title = $_POST['title'] ?? '';
-        $name = $_POST['name'] ?? ''; // for skills
-        $subtitle = $_POST['subtitle'] ?? ''; // for banners
-        $description = $_POST['description'] ?? ''; // for designs/websites/certificates
-        $url = $_POST['url'] ?? ''; // for websites
-        $platform = $_POST['platform'] ?? ''; // for certificates
-
+        $id = (int) $_POST['id'];
         $table = '';
         if ($type === 'banner') $table = 'banners';
         elseif ($type === 'design') $table = 'designs';
@@ -135,143 +118,76 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         elseif ($type === 'skill') $table = 'skills';
 
         if ($table) {
+            $updateData = [];
             if ($type === 'skill') {
-                $params = [$name];
-                $sql = "UPDATE $table SET name = ?";
+                $updateData['name'] = $_POST['name'];
             } else {
-                $params = [$title];
-                $sql = "UPDATE $table SET title = ?";
-            }
-            
-            if ($type === 'banner') {
-                $sql .= ", subtitle = ?";
-                $params[] = $subtitle;
-            } elseif ($type === 'design' || $type === 'website' || $type === 'certificate') {
-                $sql .= ", description = ?";
-                $params[] = $description;
-                if ($type === 'website') {
-                    $sql .= ", url = ?";
-                    $params[] = $url;
-                }
-                if ($type === 'certificate') {
-                    $sql .= ", platform = ?";
-                    $params[] = $platform;
-                }
+                $updateData['title'] = $_POST['title'];
             }
 
-            // Handle optional icon/image update
+            if ($type === 'banner') {
+                $updateData['subtitle'] = $_POST['subtitle'];
+            } elseif ($type === 'design' || $type === 'website' || $type === 'certificate') {
+                $updateData['description'] = $_POST['description'];
+                if ($type === 'website') $updateData['url'] = $_POST['url'];
+                if ($type === 'certificate') $updateData['platform'] = $_POST['platform'];
+            }
+
+            // Handle optional file update
             $file_field = ($type === 'skill') ? 'icon' : 'image';
             if (isset($_FILES[$file_field]) && $_FILES[$file_field]['error'] === UPLOAD_ERR_OK) {
                 $path = secure_upload($_FILES[$file_field], $type . 's');
                 if ($path) {
-                    // Delete old file
-                    $stmt = $pdo->prepare("SELECT icon_path, image_path FROM $table WHERE id = ?");
-                    $stmt->execute([$id]);
-                    $old = $stmt->fetch();
+                    $old = $supabase->querySingle($table, 'id', $id);
                     $old_path = ($type === 'skill') ? $old['icon_path'] : $old['image_path'];
-                    if ($old_path && file_exists(__DIR__ . '/../' . $old_path)) {
-                        unlink(__DIR__ . '/../' . $old_path);
-                    }
-                    if ($type === 'skill') {
-                        $sql .= ", icon_path = ?";
-                    } else {
-                        $sql .= ", image_path = ?";
-                    }
-                    $params[] = $path;
+                    if ($old_path && file_exists(__DIR__ . '/../' . $old_path)) unlink(__DIR__ . '/../' . $old_path);
+                    if ($type === 'skill') $updateData['icon_path'] = $path;
+                    else $updateData['image_path'] = $path;
                 }
             }
 
-            $sql .= " WHERE id = ?";
-            $params[] = $id;
-            
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute($params);
+            $supabase->update($table, $updateData, 'id', $id);
             set_toast('Updated successfully');
             redirect('index.php');
         }
-    } elseif ($action === 'change_password') {
-        $old = $_POST['old_password'];
-        $new = $_POST['new_password'];
-        $confirm = $_POST['confirm_password'];
-
-        if ($new !== $confirm) {
-            $err = 'Passwords do not match';
-        } else {
-            $stmt = $pdo->prepare("SELECT password FROM users WHERE id = ?");
-            $stmt->execute([$_SESSION['user_id']]);
-            $user = $stmt->fetch();
-
-            if (password_verify($old, $user['password'])) {
-                $hash = password_hash($new, PASSWORD_DEFAULT);
-                $stmt = $pdo->prepare("UPDATE users SET password = ? WHERE id = ?");
-                $stmt->execute([$hash, $_SESSION['user_id']]);
-                set_toast('Password changed successfully');
-                redirect('index.php');
-            } else {
-                $err = 'Incorrect old password';
-            }
-        }
     } elseif ($action === 'edit_knowledge') {
-        $id = (int)$_POST['id'];
-        $stmt = $pdo->prepare("UPDATE chatbot_knowledge SET keyword = ?, response = ? WHERE id = ?");
-        $stmt->execute([$_POST['keyword'], $_POST['response'], $id]);
+        $id = (int) $_POST['id'];
+        $supabase->update('chatbot_knowledge', ['keyword' => $_POST['keyword'], 'response' => $_POST['response']], 'id', $id);
         set_toast('Knowledge updated successfully');
         redirect('index.php');
     } elseif ($action === 'delete') {
         $type = $_POST['type'];
-        $id = (int)$_POST['id'];
-        $table = '';
-        if ($type === 'banner') $table = 'banners';
-        elseif ($type === 'design') $table = 'designs';
-        elseif ($type === 'website') $table = 'websites';
-        elseif ($type === 'certificate') $table = 'certificates';
-        elseif ($type === 'skill') $table = 'skills';
-        elseif ($type === 'knowledge') $table = 'chatbot_knowledge';
-
+        $id = (int) $_POST['id'];
+        $table = ($type === 'knowledge') ? 'chatbot_knowledge' : $type . 's';
         if ($table) {
-            // Delete file if applicable
             if ($type !== 'knowledge') {
-                $stmt = $pdo->prepare("SELECT icon_path, image_path FROM $table WHERE id = ?");
-                $stmt->execute([$id]);
-                $item = $stmt->fetch();
+                $item = $supabase->querySingle($table, 'id', $id);
                 $old_path = ($type === 'skill') ? $item['icon_path'] : $item['image_path'];
-                if ($old_path && file_exists(__DIR__ . '/../' . $old_path)) {
-                    unlink(__DIR__ . '/../' . $old_path);
-                }
+                if ($old_path && file_exists(__DIR__ . '/../' . $old_path)) unlink(__DIR__ . '/../' . $old_path);
             }
-            // Delete from DB
-            $stmt = $pdo->prepare("DELETE FROM $table WHERE id = ?");
-            $stmt->execute([$id]);
+            $supabase->delete($table, 'id', $id);
             set_toast('Deleted successfully');
             redirect('index.php');
         }
     }
 }
 
-// Fetch items
-$banners = $pdo->query("SELECT * FROM banners ORDER BY id DESC")->fetchAll();
-$designs = $pdo->query("SELECT * FROM designs ORDER BY id DESC")->fetchAll();
-$websites = $pdo->query("SELECT * FROM websites ORDER BY id DESC")->fetchAll();
-$certificates = $pdo->query("SELECT * FROM certificates ORDER BY id DESC")->fetchAll();
-$skills = $pdo->query("SELECT * FROM skills ORDER BY id DESC")->fetchAll();
-$knowledge = $pdo->query("SELECT * FROM chatbot_knowledge ORDER BY keyword ASC")->fetchAll();
-$partners = $pdo->query("SELECT * FROM partners ORDER BY id DESC")->fetchAll();
-$testimonials = $pdo->query("SELECT * FROM testimonials ORDER BY id DESC")->fetchAll();
+// Fetch items (Prioritize Supabase)
+$banners = sb_get('banners', 'id.desc');
+$designs = sb_get('designs', 'id.desc');
+$websites = sb_get('websites', 'id.desc');
+$certificates = sb_get('certificates', 'id.desc');
+$skills = sb_get('skills', 'id.desc');
+$knowledge = sb_get('chatbot_knowledge', 'keyword.asc');
+$partners = sb_get('partners', 'id.desc');
+$testimonials = sb_get('testimonials', 'id.desc');
 
-// Get AI Settings
-$stmt = $pdo->prepare("SELECT key_value FROM settings WHERE key_name = 'ai_provider'");
-$stmt->execute();
-$ai_provider = $stmt->fetchColumn() ?: 'gemini';
+// Get AI Settings from Supabase
+$ai_provider_setting = $supabase->querySingle('settings', 'key_name', 'ai_provider');
+$ai_provider = $ai_provider_setting['key_value'] ?? 'gemini';
 
-$stmt = $pdo->prepare("SELECT key_value FROM settings WHERE key_name = 'ai_api_key'");
-$stmt->execute();
-$ai_api_key = $stmt->fetchColumn();
-
-if (!$ai_api_key) {
-    $stmt = $pdo->prepare("SELECT key_value FROM settings WHERE key_name = 'gemini_api_key'");
-    $stmt->execute();
-    $ai_api_key = $stmt->fetchColumn();
-}
+$ai_key_setting = $supabase->querySingle('settings', 'key_name', 'ai_api_key');
+$ai_api_key = $ai_key_setting['key_value'] ?? '';
 
 $stats = [
     'banners' => count($banners),
@@ -284,6 +200,7 @@ $stats = [
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -324,6 +241,7 @@ $stats = [
             padding: 1.5rem 2rem;
             border: 1px solid var(--admin-border);
         }
+
         .header h1 {
             font-family: 'JetBrains Mono', monospace;
             font-size: 1.2rem;
@@ -332,7 +250,12 @@ $stats = [
             text-transform: uppercase;
             color: var(--admin-primary);
         }
-        .header span { color: var(--admin-muted); font-size: 0.85rem; }
+
+        .header span {
+            color: var(--admin-muted);
+            font-size: 0.85rem;
+        }
+
         .logout-btn {
             color: var(--admin-danger);
             text-decoration: none;
@@ -345,6 +268,7 @@ $stats = [
             border: 1px solid var(--admin-danger);
             transition: 0.2s;
         }
+
         .logout-btn:hover {
             background: var(--admin-danger);
             color: #fff;
@@ -358,6 +282,7 @@ $stats = [
             border: 1px solid var(--admin-border);
             overflow-x: auto;
         }
+
         .tab-btn {
             background: transparent;
             border: none;
@@ -372,19 +297,29 @@ $stats = [
             text-transform: uppercase;
             white-space: nowrap;
         }
-        .tab-btn:last-child { border-right: none; }
+
+        .tab-btn:last-child {
+            border-right: none;
+        }
+
         .tab-btn:hover {
             background: var(--admin-primary-dim);
             color: var(--admin-primary);
         }
+
         .tab-btn.active {
             background: var(--admin-primary);
             color: #000;
             font-weight: 700;
         }
 
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
 
         /* Form Card */
         .form-card {
@@ -393,6 +328,7 @@ $stats = [
             border: 1px solid var(--admin-border);
             margin-bottom: 2rem;
         }
+
         .form-card h3 {
             font-family: 'JetBrains Mono', monospace;
             font-size: 0.85rem;
@@ -403,11 +339,13 @@ $stats = [
             padding-bottom: 1rem;
             border-bottom: 1px solid var(--admin-border);
         }
+
         .form-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 1.5rem;
         }
+
         .form-group label {
             display: block;
             margin-bottom: 0.5rem;
@@ -417,6 +355,7 @@ $stats = [
             letter-spacing: 1px;
             text-transform: uppercase;
         }
+
         .form-group input,
         .form-group textarea,
         .form-group select {
@@ -430,11 +369,13 @@ $stats = [
             transition: border-color 0.2s;
             outline: none;
         }
+
         .form-group input:focus,
         .form-group textarea:focus {
             border-color: var(--admin-primary);
             box-shadow: 0 0 0 1px var(--admin-primary-dim);
         }
+
         .form-group input[type="file"] {
             padding: 0.5rem;
             font-size: 0.8rem;
@@ -454,6 +395,7 @@ $stats = [
             margin-top: 1.5rem;
             transition: 0.2s;
         }
+
         .submit-btn:hover {
             background: #fbbf24;
             box-shadow: 4px 4px 0px rgba(245, 158, 11, 0.3);
@@ -467,6 +409,7 @@ $stats = [
             gap: 1rem;
             margin-bottom: 2rem;
         }
+
         .stat-card {
             background: var(--admin-card);
             border: 1px solid var(--admin-border);
@@ -474,10 +417,12 @@ $stats = [
             text-align: center;
             transition: 0.2s;
         }
+
         .stat-card:hover {
             border-color: var(--admin-primary);
             transform: translateY(-2px);
         }
+
         .stat-card h3 {
             font-size: 0.7rem;
             color: var(--admin-muted);
@@ -485,6 +430,7 @@ $stats = [
             letter-spacing: 1px;
             margin-bottom: 0.75rem;
         }
+
         .stat-card .value {
             font-family: 'JetBrains Mono', monospace;
             font-size: 2rem;
@@ -499,27 +445,32 @@ $stats = [
             gap: 1.5rem;
             margin-top: 2rem;
         }
+
         .item-card {
             background: var(--admin-card);
             overflow: hidden;
             border: 1px solid var(--admin-border);
             transition: 0.2s;
         }
+
         .item-card:hover {
             border-color: var(--admin-primary);
         }
+
         .item-card img {
             width: 100%;
             height: 180px;
             object-fit: cover;
             border-bottom: 1px solid var(--admin-border);
         }
+
         .item-info {
             padding: 1rem 1.25rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
+
         .item-info h4 {
             margin: 0;
             color: #f8fafc;
@@ -539,10 +490,12 @@ $stats = [
             letter-spacing: 1px;
             transition: 0.2s;
         }
+
         .delete-btn:hover {
             background: var(--admin-danger);
             color: #fff;
         }
+
         .edit-btn {
             background: var(--admin-primary-dim);
             color: var(--admin-primary);
@@ -557,6 +510,7 @@ $stats = [
             letter-spacing: 1px;
             transition: 0.2s;
         }
+
         .edit-btn:hover {
             background: var(--admin-primary);
             color: #000;
@@ -574,6 +528,7 @@ $stats = [
             justify-content: center;
             padding: 1rem;
         }
+
         .modal-content {
             background: var(--admin-card);
             width: 100%;
@@ -591,11 +546,13 @@ $stats = [
             font-size: 0.8rem;
             letter-spacing: 1px;
         }
+
         .alert-success {
             background: rgba(34, 197, 94, 0.1);
             color: #4ade80;
             border: 1px solid #22c55e;
         }
+
         .alert-error {
             background: rgba(239, 68, 68, 0.1);
             color: #f87171;
@@ -603,13 +560,28 @@ $stats = [
         }
 
         /* Scrollbar */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: var(--admin-bg); }
-        ::-webkit-scrollbar-thumb { background: var(--admin-border); }
-        ::-webkit-scrollbar-thumb:hover { background: var(--admin-primary); }
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--admin-bg);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--admin-border);
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--admin-primary);
+        }
 
         /* Table styling */
-        table { border-collapse: collapse; }
+        table {
+            border-collapse: collapse;
+        }
+
         table th {
             font-family: 'JetBrains Mono', monospace;
             font-size: 0.7rem;
@@ -617,9 +589,13 @@ $stats = [
             text-transform: uppercase;
             color: var(--admin-muted);
         }
-        table td { font-size: 0.85rem; }
+
+        table td {
+            font-size: 0.85rem;
+        }
     </style>
 </head>
+
 <body>
     <div class="dashboard-container">
         <header class="header">
@@ -630,8 +606,10 @@ $stats = [
             </div>
         </header>
 
-        <?php if ($msg): ?> <div class="alert alert-success"><?php echo h($msg); ?></div> <?php endif; ?>
-        <?php if ($err): ?> <div class="alert alert-error"><?php echo h($err); ?></div> <?php endif; ?>
+        <?php if ($msg): ?>
+            <div class="alert alert-success"><?php echo h($msg); ?></div> <?php endif; ?>
+        <?php if ($err): ?>
+            <div class="alert alert-error"><?php echo h($err); ?></div> <?php endif; ?>
 
         <div class="tabs">
             <button class="tab-btn active" onclick="showTab('dashboard')">Dashboard</button>
@@ -678,7 +656,8 @@ $stats = [
             </div>
             <div class="form-card">
                 <h3>Welcome to Dashboard</h3>
-                <p style="color: var(--text-muted);">Manage your portfolio content from the tabs above. You can add new items, edit existing ones, or remove them.</p>
+                <p style="color: var(--text-muted);">Manage your portfolio content from the tabs above. You can add new
+                    items, edit existing ones, or remove them.</p>
             </div>
         </div>
 
@@ -700,34 +679,37 @@ $stats = [
                         </div>
                         <div class="form-group">
                             <label>Image</label>
-                            <input type="file" name="image" required accept="image/*" onchange="previewImage(this, 'banner-preview')">
+                            <input type="file" name="image" required accept="image/*"
+                                onchange="previewImage(this, 'banner-preview')">
                             <div id="banner-preview" style="margin-top: 10px; display: none;">
-                                <img src="" style="width: 100%; height: 100px; object-fit: cover; border-radius: 0.5rem;">
+                                <img src=""
+                                    style="width: 100%; height: 100px; object-fit: cover; border-radius: 0.5rem;">
                             </div>
                         </div>
                     </div>
                     <button type="submit" class="submit-btn">Upload Banner</button>
                 </form>
             </div>
-            
+
             <div class="items-grid">
                 <?php foreach ($banners as $b): ?>
-                <div class="item-card">
-                    <img src="../<?php echo h($b['image_path']); ?>" alt="">
-                    <div class="item-info">
-                        <h4><?php echo h($b['title']); ?></h4>
-                        <div style="display: flex; gap: 10px;">
-                            <button class="edit-btn" onclick='openEditModal("banner", <?php echo json_encode($b); ?>)'>Edit</button>
-                            <form method="POST" onsubmit="return confirm('Are you sure?')">
-                                <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
-                                <input type="hidden" name="action" value="delete">
-                                <input type="hidden" name="type" value="banner">
-                                <input type="hidden" name="id" value="<?php echo $b['id']; ?>">
-                                <button type="submit" class="delete-btn">Delete</button>
-                            </form>
+                    <div class="item-card">
+                        <img src="../<?php echo h($b['image_path']); ?>" alt="">
+                        <div class="item-info">
+                            <h4><?php echo h($b['title']); ?></h4>
+                            <div style="display: flex; gap: 10px;">
+                                <button class="edit-btn"
+                                    onclick='openEditModal("banner", <?php echo json_encode($b); ?>)'>Edit</button>
+                                <form method="POST" onsubmit="return confirm('Are you sure?')">
+                                    <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
+                                    <input type="hidden" name="action" value="delete">
+                                    <input type="hidden" name="type" value="banner">
+                                    <input type="hidden" name="id" value="<?php echo $b['id']; ?>">
+                                    <button type="submit" class="delete-btn">Delete</button>
+                                </form>
+                            </div>
                         </div>
                     </div>
-                </div>
                 <?php endforeach; ?>
             </div>
         </div>
@@ -746,9 +728,11 @@ $stats = [
                         </div>
                         <div class="form-group">
                             <label>Image</label>
-                            <input type="file" name="image" required accept="image/*" onchange="previewImage(this, 'design-preview')">
+                            <input type="file" name="image" required accept="image/*"
+                                onchange="previewImage(this, 'design-preview')">
                             <div id="design-preview" style="margin-top: 10px; display: none;">
-                                <img src="" style="width: 100%; height: 100px; object-fit: cover; border-radius: 0.5rem;">
+                                <img src=""
+                                    style="width: 100%; height: 100px; object-fit: cover; border-radius: 0.5rem;">
                             </div>
                         </div>
                         <div class="form-group" style="grid-column: span 2;">
@@ -761,22 +745,23 @@ $stats = [
             </div>
             <div class="items-grid">
                 <?php foreach ($designs as $d): ?>
-                <div class="item-card">
-                    <img src="../<?php echo h($d['image_path']); ?>" alt="">
-                    <div class="item-info">
-                        <h4><?php echo h($d['title']); ?></h4>
-                        <div style="display: flex; gap: 10px;">
-                            <button class="edit-btn" onclick='openEditModal("design", <?php echo json_encode($d); ?>)'>Edit</button>
-                            <form method="POST" onsubmit="return confirm('Are you sure?')">
-                                <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
-                                <input type="hidden" name="action" value="delete">
-                                <input type="hidden" name="type" value="design">
-                                <input type="hidden" name="id" value="<?php echo $d['id']; ?>">
-                                <button type="submit" class="delete-btn">Delete</button>
-                            </form>
+                    <div class="item-card">
+                        <img src="../<?php echo h($d['image_path']); ?>" alt="">
+                        <div class="item-info">
+                            <h4><?php echo h($d['title']); ?></h4>
+                            <div style="display: flex; gap: 10px;">
+                                <button class="edit-btn"
+                                    onclick='openEditModal("design", <?php echo json_encode($d); ?>)'>Edit</button>
+                                <form method="POST" onsubmit="return confirm('Are you sure?')">
+                                    <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
+                                    <input type="hidden" name="action" value="delete">
+                                    <input type="hidden" name="type" value="design">
+                                    <input type="hidden" name="id" value="<?php echo $d['id']; ?>">
+                                    <button type="submit" class="delete-btn">Delete</button>
+                                </form>
+                            </div>
                         </div>
                     </div>
-                </div>
                 <?php endforeach; ?>
             </div>
         </div>
@@ -799,9 +784,11 @@ $stats = [
                         </div>
                         <div class="form-group">
                             <label>Thumbnail</label>
-                            <input type="file" name="image" required accept="image/*" onchange="previewImage(this, 'web-preview')">
+                            <input type="file" name="image" required accept="image/*"
+                                onchange="previewImage(this, 'web-preview')">
                             <div id="web-preview" style="margin-top: 10px; display: none;">
-                                <img src="" style="width: 100%; height: 100px; object-fit: cover; border-radius: 0.5rem;">
+                                <img src=""
+                                    style="width: 100%; height: 100px; object-fit: cover; border-radius: 0.5rem;">
                             </div>
                         </div>
                         <div class="form-group" style="grid-column: span 3;">
@@ -814,22 +801,23 @@ $stats = [
             </div>
             <div class="items-grid">
                 <?php foreach ($websites as $w): ?>
-                <div class="item-card">
-                    <img src="../<?php echo h($w['image_path']); ?>" alt="">
-                    <div class="item-info">
-                        <h4><?php echo h($w['title']); ?></h4>
-                        <div style="display: flex; gap: 10px;">
-                            <button class="edit-btn" onclick='openEditModal("website", <?php echo json_encode($w); ?>)'>Edit</button>
-                            <form method="POST" onsubmit="return confirm('Are you sure?')">
-                                <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
-                                <input type="hidden" name="action" value="delete">
-                                <input type="hidden" name="type" value="website">
-                                <input type="hidden" name="id" value="<?php echo $w['id']; ?>">
-                                <button type="submit" class="delete-btn">Delete</button>
-                            </form>
+                    <div class="item-card">
+                        <img src="../<?php echo h($w['image_path']); ?>" alt="">
+                        <div class="item-info">
+                            <h4><?php echo h($w['title']); ?></h4>
+                            <div style="display: flex; gap: 10px;">
+                                <button class="edit-btn"
+                                    onclick='openEditModal("website", <?php echo json_encode($w); ?>)'>Edit</button>
+                                <form method="POST" onsubmit="return confirm('Are you sure?')">
+                                    <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
+                                    <input type="hidden" name="action" value="delete">
+                                    <input type="hidden" name="type" value="website">
+                                    <input type="hidden" name="id" value="<?php echo $w['id']; ?>">
+                                    <button type="submit" class="delete-btn">Delete</button>
+                                </form>
+                            </div>
                         </div>
                     </div>
-                </div>
                 <?php endforeach; ?>
             </div>
         </div>
@@ -852,9 +840,11 @@ $stats = [
                         </div>
                         <div class="form-group">
                             <label>File (Image/PDF)</label>
-                            <input type="file" name="image" required accept="image/*,application/pdf" onchange="previewImage(this, 'cert-preview')">
+                            <input type="file" name="image" required accept="image/*,application/pdf"
+                                onchange="previewImage(this, 'cert-preview')">
                             <div id="cert-preview" style="margin-top: 10px; display: none;">
-                                <img src="" style="width: 100%; height: 100px; object-fit: cover; border-radius: 0.5rem;">
+                                <img src=""
+                                    style="width: 100%; height: 100px; object-fit: cover; border-radius: 0.5rem;">
                             </div>
                         </div>
                         <div class="form-group" style="grid-column: span 2;">
@@ -867,31 +857,34 @@ $stats = [
             </div>
             <div class="items-grid">
                 <?php foreach ($certificates as $c): ?>
-                <div class="item-card">
-                    <?php if (pathinfo($c['image_path'], PATHINFO_EXTENSION) === 'pdf'): ?>
-                        <div style="height: 180px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); font-size: 2rem; color: #f43f5e;">
-                            PDF
-                        </div>
-                    <?php else: ?>
-                        <img src="../<?php echo h($c['image_path']); ?>" alt="">
-                    <?php endif; ?>
-                    <div class="item-info">
-                        <div>
-                            <h4><?php echo h($c['title']); ?></h4>
-                            <div style="font-size: 0.75rem; color: var(--admin-primary); margin-top: 0.2rem;"><?php echo h($c['platform']); ?></div>
-                        </div>
-                        <div style="display: flex; gap: 10px;">
-                            <button class="edit-btn" onclick='openEditModal("certificate", <?php echo json_encode($c); ?>)'>Edit</button>
-                            <form method="POST" onsubmit="return confirm('Are you sure?')">
-                                <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
-                                <input type="hidden" name="action" value="delete">
-                                <input type="hidden" name="type" value="certificate">
-                                <input type="hidden" name="id" value="<?php echo $c['id']; ?>">
-                                <button type="submit" class="delete-btn">Delete</button>
-                            </form>
+                    <div class="item-card">
+                        <?php if (pathinfo($c['image_path'], PATHINFO_EXTENSION) === 'pdf'): ?>
+                            <div
+                                style="height: 180px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); font-size: 2rem; color: #f43f5e;">
+                                PDF
+                            </div>
+                        <?php else: ?>
+                            <img src="../<?php echo h($c['image_path']); ?>" alt="">
+                        <?php endif; ?>
+                        <div class="item-info">
+                            <div>
+                                <h4><?php echo h($c['title']); ?></h4>
+                                <div style="font-size: 0.75rem; color: var(--admin-primary); margin-top: 0.2rem;">
+                                    <?php echo h($c['platform']); ?></div>
+                            </div>
+                            <div style="display: flex; gap: 10px;">
+                                <button class="edit-btn"
+                                    onclick='openEditModal("certificate", <?php echo json_encode($c); ?>)'>Edit</button>
+                                <form method="POST" onsubmit="return confirm('Are you sure?')">
+                                    <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
+                                    <input type="hidden" name="action" value="delete">
+                                    <input type="hidden" name="type" value="certificate">
+                                    <input type="hidden" name="id" value="<?php echo $c['id']; ?>">
+                                    <button type="submit" class="delete-btn">Delete</button>
+                                </form>
+                            </div>
                         </div>
                     </div>
-                </div>
                 <?php endforeach; ?>
             </div>
         </div>
@@ -910,9 +903,11 @@ $stats = [
                         </div>
                         <div class="form-group">
                             <label>Icon (Logo)</label>
-                            <input type="file" name="icon" required accept="image/*" onchange="previewImage(this, 'skill-preview')">
+                            <input type="file" name="icon" required accept="image/*"
+                                onchange="previewImage(this, 'skill-preview')">
                             <div id="skill-preview" style="margin-top: 10px; display: none;">
-                                <img src="" style="width: 80px; height: 80px; object-fit: contain; background: #fff; padding: 10px; border-radius: 0.5rem;">
+                                <img src=""
+                                    style="width: 80px; height: 80px; object-fit: contain; background: #fff; padding: 10px; border-radius: 0.5rem;">
                             </div>
                         </div>
                     </div>
@@ -921,185 +916,203 @@ $stats = [
             </div>
             <div class="items-grid">
                 <?php foreach ($skills as $s): ?>
-                <div class="item-card">
-                    <div style="background: white; padding: 2rem; display: flex; justify-content: center;">
-                        <img src="../<?php echo h($s['icon_path']); ?>" alt="" style="width: 60px; height: 60px; object-fit: contain;">
-                    </div>
-                    <div class="item-info">
-                        <h4><?php echo h($s['name']); ?></h4>
-                        <div style="display: flex; gap: 10px;">
-                            <button class="edit-btn" onclick='openEditModal("skill", <?php echo json_encode($s); ?>)'>Edit</button>
-                            <form method="POST" onsubmit="return confirm('Are you sure?')">
-                                <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
-                                <input type="hidden" name="action" value="delete">
-                                <input type="hidden" name="type" value="skill">
-                                <input type="hidden" name="id" value="<?php echo $s['id']; ?>">
-                                <button type="submit" class="delete-btn">Delete</button>
-                            </form>
+                    <div class="item-card">
+                        <div style="background: white; padding: 2rem; display: flex; justify-content: center;">
+                            <img src="../<?php echo h($s['icon_path']); ?>" alt=""
+                                style="width: 60px; height: 60px; object-fit: contain;">
+                        </div>
+                        <div class="item-info">
+                            <h4><?php echo h($s['name']); ?></h4>
+                            <div style="display: flex; gap: 10px;">
+                                <button class="edit-btn"
+                                    onclick='openEditModal("skill", <?php echo json_encode($s); ?>)'>Edit</button>
+                                <form method="POST" onsubmit="return confirm('Are you sure?')">
+                                    <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
+                                    <input type="hidden" name="action" value="delete">
+                                    <input type="hidden" name="type" value="skill">
+                                    <input type="hidden" name="id" value="<?php echo $s['id']; ?>">
+                                    <button type="submit" class="delete-btn">Delete</button>
+                                </form>
+                            </div>
                         </div>
                     </div>
-                </div>
                 <?php endforeach; ?>
             </div>
         </div>
 
-            </div>
+    </div>
+    </div>
+
+    <!-- Partners Tab -->
+    <div id="partners" class="tab-content">
+        <div class="form-card">
+            <h3>Add Payment Gateway / Partner</h3>
+            <form method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
+                <input type="hidden" name="action" value="upload_partner">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Partner Name</label>
+                        <input type="text" name="name" required placeholder="e.g. Midtrans, Xendit">
+                    </div>
+                    <div class="form-group">
+                        <label>Logo (PNG/SVG preferred)</label>
+                        <input type="file" name="logo" required accept="image/*">
+                    </div>
+                </div>
+                <button type="submit" class="submit-btn">Upload Partner</button>
+            </form>
         </div>
 
-        <!-- Partners Tab -->
-        <div id="partners" class="tab-content">
-            <div class="form-card">
-                <h3>Add Payment Gateway / Partner</h3>
-                <form method="POST" enctype="multipart/form-data">
-                    <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
-                    <input type="hidden" name="action" value="upload_partner">
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label>Partner Name</label>
-                            <input type="text" name="name" required placeholder="e.g. Midtrans, Xendit">
-                        </div>
-                        <div class="form-group">
-                            <label>Logo (PNG/SVG preferred)</label>
-                            <input type="file" name="logo" required accept="image/*">
-                        </div>
-                    </div>
-                    <button type="submit" class="submit-btn">Upload Partner</button>
-                </form>
-            </div>
-
-            <div class="card-grid" style="margin-top: 2rem;">
-                <?php foreach ($partners as $p): ?>
+        <div class="card-grid" style="margin-top: 2rem;">
+            <?php foreach ($partners as $p): ?>
                 <div class="stat-card" style="display: flex; flex-direction: column; align-items: center; gap: 1rem;">
-                    <img src="../<?php echo h($p['logo_path']); ?>" style="height: 40px; max-width: 100%; object-fit: contain; filter: grayscale(1) invert(1);">
+                    <img src="../<?php echo h($p['logo_path']); ?>"
+                        style="height: 40px; max-width: 100%; object-fit: contain; filter: grayscale(1) invert(1);">
                     <span><?php echo h($p['name']); ?></span>
                     <form method="POST" onsubmit="return confirm('Delete this partner?');">
                         <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
                         <input type="hidden" name="action" value="delete_partner">
                         <input type="hidden" name="id" value="<?php echo $p['id']; ?>">
-                        <button type="submit" style="background: none; border: none; color: #ef4444; cursor: pointer; font-size: 0.8rem;">Delete</button>
+                        <button type="submit"
+                            style="background: none; border: none; color: #ef4444; cursor: pointer; font-size: 0.8rem;">Delete</button>
                     </form>
                 </div>
-                <?php endforeach; ?>
-            </div>
+            <?php endforeach; ?>
         </div>
+    </div>
 
-        <!-- Chatbot Tab -->
+    <!-- Chatbot Tab -->
 
-        <!-- Testimonials Tab -->
-        <div id="testimonials" class="tab-content">
-            <div class="form-card">
-                <h3>Add New Testimonial</h3>
-                <form method="POST" enctype="multipart/form-data">
-                    <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
-                    <input type="hidden" name="action" value="upload_testimonial">
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label>Name</label>
-                            <input type="text" name="name" required placeholder="e.g. John Doe">
-                        </div>
-                        <div class="form-group">
-                            <label>Role</label>
-                            <input type="text" name="role" required placeholder="e.g. CEO, Designer">
-                        </div>
-                        <div class="form-group" style="grid-column: span 2;">
-                            <label>Testimonial Text</label>
-                            <textarea name="text" required rows="3" placeholder="What did they say about your work?"></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label>Photo</label>
-                            <input type="file" name="image" required accept="image/*" onchange="previewImage(this, 'testimonial-preview')">
-                            <div id="testimonial-preview" style="margin-top: 10px; display: none;">
-                                <img src="" style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px;">
-                            </div>
+    <!-- Testimonials Tab -->
+    <div id="testimonials" class="tab-content">
+        <div class="form-card">
+            <h3>Add New Testimonial</h3>
+            <form method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
+                <input type="hidden" name="action" value="upload_testimonial">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Name</label>
+                        <input type="text" name="name" required placeholder="e.g. John Doe">
+                    </div>
+                    <div class="form-group">
+                        <label>Role</label>
+                        <input type="text" name="role" required placeholder="e.g. CEO, Designer">
+                    </div>
+                    <div class="form-group" style="grid-column: span 2;">
+                        <label>Testimonial Text</label>
+                        <textarea name="text" required rows="3"
+                            placeholder="What did they say about your work?"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Photo</label>
+                        <input type="file" name="image" required accept="image/*"
+                            onchange="previewImage(this, 'testimonial-preview')">
+                        <div id="testimonial-preview" style="margin-top: 10px; display: none;">
+                            <img src="" style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px;">
                         </div>
                     </div>
-                    <button type="submit" class="submit-btn">Add Testimonial</button>
-                </form>
-            </div>
+                </div>
+                <button type="submit" class="submit-btn">Add Testimonial</button>
+            </form>
+        </div>
 
-            <div class="items-grid" style="margin-top: 2rem;">
-                <?php foreach ($testimonials as $t): ?>
+        <div class="items-grid" style="margin-top: 2rem;">
+            <?php foreach ($testimonials as $t): ?>
                 <div class="stat-card" style="display: flex; gap: 1rem; align-items: flex-start; padding: 1.5rem;">
-                    <img src="../<?php echo h($t['image_path']); ?>" style="width: 50px; height: 50px; border-radius: 4px; object-fit: cover; flex-shrink: 0;">
+                    <img src="../<?php echo h($t['image_path']); ?>"
+                        style="width: 50px; height: 50px; border-radius: 4px; object-fit: cover; flex-shrink: 0;">
                     <div style="flex: 1; min-width: 0;">
                         <strong style="color: white;"><?php echo h($t['name']); ?></strong>
-                        <div style="font-size: 0.75rem; color: #f59e0b; margin-bottom: 0.5rem;"><?php echo h($t['role']); ?></div>
-                        <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.5; margin: 0;"><?php echo h($t['text']); ?></p>
+                        <div style="font-size: 0.75rem; color: #f59e0b; margin-bottom: 0.5rem;"><?php echo h($t['role']); ?>
+                        </div>
+                        <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.5; margin: 0;">
+                            <?php echo h($t['text']); ?></p>
                     </div>
                     <form method="POST" onsubmit="return confirm('Delete this testimonial?');" style="flex-shrink: 0;">
                         <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
                         <input type="hidden" name="action" value="delete_testimonial">
                         <input type="hidden" name="id" value="<?php echo $t['id']; ?>">
-                        <button type="submit" style="background: none; border: none; color: #ef4444; cursor: pointer; font-size: 0.8rem;">Delete</button>
+                        <button type="submit"
+                            style="background: none; border: none; color: #ef4444; cursor: pointer; font-size: 0.8rem;">Delete</button>
                     </form>
                 </div>
-                <?php endforeach; ?>
-            </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+
+    <!-- Chatbot Tab -->
+    <div id="chatbot" class="tab-content">
+        <div class="form-card">
+            <h3>AI Assistant Configuration</h3>
+            <form method="POST">
+                <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
+                <input type="hidden" name="action" value="update_api_key">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>AI Provider</label>
+                        <select name="provider" class="form-control"
+                            style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: white; padding: 0.75rem; border-radius: 0.5rem; outline: none;">
+                            <option value="gemini" <?php echo $ai_provider === 'gemini' ? 'selected' : ''; ?>>Google
+                                Gemini</option>
+                            <option value="nvidia" <?php echo $ai_provider === 'nvidia' ? 'selected' : ''; ?>>NVIDIA NIM
+                                (Llama 3)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>API Key</label>
+                        <input type="password" name="api_key" value="<?php echo h($ai_api_key); ?>" required
+                            placeholder="Enter your API Key">
+                    </div>
+                </div>
+                <button type="submit" class="submit-btn" style="margin-top: 1rem;">Update AI Settings</button>
+                <p style="font-size: 0.8rem; color: #94a3b8; margin-top: 0.5rem;">
+                    Gemini: <a href="https://aistudio.google.com/app/apikey" target="_blank"
+                        style="color: #6366f1;">Google AI Studio</a> |
+                    NVIDIA: <a href="https://build.nvidia.com/explore/discover" target="_blank"
+                        style="color: #6366f1;">NVIDIA NIM</a>
+                </p>
+            </form>
         </div>
 
-        <!-- Chatbot Tab -->
-        <div id="chatbot" class="tab-content">
-            <div class="form-card">
-                <h3>AI Assistant Configuration</h3>
-                <form method="POST">
-                    <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
-                    <input type="hidden" name="action" value="update_api_key">
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label>AI Provider</label>
-                            <select name="provider" class="form-control" style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: white; padding: 0.75rem; border-radius: 0.5rem; outline: none;">
-                                <option value="gemini" <?php echo $ai_provider === 'gemini' ? 'selected' : ''; ?>>Google Gemini</option>
-                                <option value="nvidia" <?php echo $ai_provider === 'nvidia' ? 'selected' : ''; ?>>NVIDIA NIM (Llama 3)</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>API Key</label>
-                            <input type="password" name="api_key" value="<?php echo h($ai_api_key); ?>" required placeholder="Enter your API Key">
-                        </div>
+        <div class="form-card" style="margin-top: 2rem;">
+            <h3>Add Bot Knowledge (Custom Rules)</h3>
+            <form method="POST">
+                <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
+                <input type="hidden" name="action" value="add_knowledge">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Keyword (Trigger)</label>
+                        <input type="text" name="keyword" required placeholder="e.g. harga">
                     </div>
-                    <button type="submit" class="submit-btn" style="margin-top: 1rem;">Update AI Settings</button>
-                    <p style="font-size: 0.8rem; color: #94a3b8; margin-top: 0.5rem;">
-                        Gemini: <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: #6366f1;">Google AI Studio</a> | 
-                        NVIDIA: <a href="https://build.nvidia.com/explore/discover" target="_blank" style="color: #6366f1;">NVIDIA NIM</a>
-                    </p>
-                </form>
-            </div>
-
-            <div class="form-card" style="margin-top: 2rem;">
-                <h3>Add Bot Knowledge (Custom Rules)</h3>
-                <form method="POST">
-                    <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
-                    <input type="hidden" name="action" value="add_knowledge">
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label>Keyword (Trigger)</label>
-                            <input type="text" name="keyword" required placeholder="e.g. harga">
-                        </div>
-                        <div class="form-group" style="grid-column: span 2;">
-                            <label>Bot Response</label>
-                            <input type="text" name="response" required placeholder="e.g. Harga jasa kami mulai dari...">
-                        </div>
+                    <div class="form-group" style="grid-column: span 2;">
+                        <label>Bot Response</label>
+                        <input type="text" name="response" required placeholder="e.g. Harga jasa kami mulai dari...">
                     </div>
-                    <button type="submit" class="submit-btn">Save Knowledge</button>
-                </form>
-            </div>
-            <div class="table-card" style="background: rgba(255,255,255,0.05); padding: 1.5rem; border-radius: 1rem; margin-top: 2rem;">
-                <table style="width: 100%; border-collapse: collapse; color: white;">
-                    <thead>
-                        <tr style="text-align: left; border-bottom: 1px solid var(--border);">
-                            <th style="padding: 1rem;">Keyword</th>
-                            <th style="padding: 1rem;">Response</th>
-                            <th style="padding: 1rem;">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($knowledge as $k): ?>
+                </div>
+                <button type="submit" class="submit-btn">Save Knowledge</button>
+            </form>
+        </div>
+        <div class="table-card"
+            style="background: rgba(255,255,255,0.05); padding: 1.5rem; border-radius: 1rem; margin-top: 2rem;">
+            <table style="width: 100%; border-collapse: collapse; color: white;">
+                <thead>
+                    <tr style="text-align: left; border-bottom: 1px solid var(--border);">
+                        <th style="padding: 1rem;">Keyword</th>
+                        <th style="padding: 1rem;">Response</th>
+                        <th style="padding: 1rem;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($knowledge as $k): ?>
                         <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
                             <td style="padding: 1rem;"><strong><?php echo h($k['keyword']); ?></strong></td>
                             <td style="padding: 1rem;"><?php echo h($k['response']); ?></td>
                             <td style="padding: 1rem;">
                                 <div style="display: flex; gap: 10px;">
-                                    <button class="edit-btn" onclick='openKnowledgeModal(<?php echo json_encode($k); ?>)'>Edit</button>
+                                    <button class="edit-btn"
+                                        onclick='openKnowledgeModal(<?php echo json_encode($k); ?>)'>Edit</button>
                                     <form method="POST" onsubmit="return confirm('Are you sure?')">
                                         <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
                                         <input type="hidden" name="action" value="delete">
@@ -1110,35 +1123,35 @@ $stats = [
                                 </div>
                             </td>
                         </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
         </div>
+    </div>
 
-        <!-- Security Tab -->
-        <div id="security" class="tab-content">
-            <div class="form-card" style="max-width: 500px; margin: 0 auto;">
-                <h3>Change Admin Password</h3>
-                <form method="POST">
-                    <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
-                    <input type="hidden" name="action" value="change_password">
-                    <div class="form-group" style="margin-bottom: 1rem;">
-                        <label>Current Password</label>
-                        <input type="password" name="old_password" required>
-                    </div>
-                    <div class="form-group" style="margin-bottom: 1rem;">
-                        <label>New Password</label>
-                        <input type="password" name="new_password" required>
-                    </div>
-                    <div class="form-group" style="margin-bottom: 1.5rem;">
-                        <label>Confirm New Password</label>
-                        <input type="password" name="confirm_password" required>
-                    </div>
-                    <button type="submit" class="submit-btn" style="width: 100%;">Update Password</button>
-                </form>
-            </div>
+    <!-- Security Tab -->
+    <div id="security" class="tab-content">
+        <div class="form-card" style="max-width: 500px; margin: 0 auto;">
+            <h3>Change Admin Password</h3>
+            <form method="POST">
+                <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
+                <input type="hidden" name="action" value="change_password">
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label>Current Password</label>
+                    <input type="password" name="old_password" required>
+                </div>
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label>New Password</label>
+                    <input type="password" name="new_password" required>
+                </div>
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                    <label>Confirm New Password</label>
+                    <input type="password" name="confirm_password" required>
+                </div>
+                <button type="submit" class="submit-btn" style="width: 100%;">Update Password</button>
+            </form>
         </div>
+    </div>
     </div>
 
     <!-- Edit Modal -->
@@ -1146,34 +1159,35 @@ $stats = [
         <div class="modal-content">
             <div style="display: flex; justify-content: space-between; margin-bottom: 1.5rem;">
                 <h3 id="modalTitle">Edit Item</h3>
-                <button onclick="closeModal()" style="background:none; border:none; color:#94a3b8; cursor:pointer; font-size:1.5rem;">&times;</button>
+                <button onclick="closeModal()"
+                    style="background:none; border:none; color:#94a3b8; cursor:pointer; font-size:1.5rem;">&times;</button>
             </div>
             <form id="editForm" method="POST" enctype="multipart/form-data">
                 <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
                 <input type="hidden" name="action" value="edit">
                 <input type="hidden" name="type" id="editType">
                 <input type="hidden" name="id" id="editId">
-                
+
                 <div class="form-group" style="margin-bottom: 1rem;">
                     <label id="titleLabel">Title</label>
                     <input type="text" name="title" id="editTitleInput">
                     <input type="text" name="name" id="editNameInput" style="display: none;">
                 </div>
-                
+
                 <div id="bannerFields" style="display: none;">
                     <div class="form-group" style="margin-bottom: 1rem;">
                         <label>Subtitle</label>
                         <input type="text" name="subtitle" id="editSubtitleInput">
                     </div>
                 </div>
-                
+
                 <div id="commonFields" style="display: none;">
                     <div class="form-group" style="margin-bottom: 1rem;">
                         <label>Description</label>
                         <textarea name="description" id="editDescInput" rows="3"></textarea>
                     </div>
                 </div>
-                
+
                 <div id="websiteFields" style="display: none;">
                     <div class="form-group" style="margin-bottom: 1rem;">
                         <label>URL</label>
@@ -1190,11 +1204,16 @@ $stats = [
 
                 <div class="form-group" style="margin-bottom: 1.5rem;">
                     <label id="fileLabel">Change File (Optional)</label>
-                    <input type="file" name="image" id="editImageInput" accept="image/*,application/pdf" onchange="previewImage(this, 'edit-preview')">
-                    <input type="file" name="icon" id="editIconInput" accept="image/*" onchange="previewImage(this, 'edit-preview')" style="display: none;">
+                    <input type="file" name="image" id="editImageInput" accept="image/*,application/pdf"
+                        onchange="previewImage(this, 'edit-preview')">
+                    <input type="file" name="icon" id="editIconInput" accept="image/*"
+                        onchange="previewImage(this, 'edit-preview')" style="display: none;">
                     <div id="edit-preview" style="margin-top: 10px;">
-                        <img id="currentImg" src="" style="width: 100%; height: 120px; object-fit: contain; border-radius: 0.5rem; display: none;">
-                        <div id="currentPdf" style="width: 100%; height: 120px; display: none; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); font-size: 1.5rem; color: #f43f5e; border-radius: 0.5rem;">PDF FILE</div>
+                        <img id="currentImg" src=""
+                            style="width: 100%; height: 120px; object-fit: contain; border-radius: 0.5rem; display: none;">
+                        <div id="currentPdf"
+                            style="width: 100%; height: 120px; display: none; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); font-size: 1.5rem; color: #f43f5e; border-radius: 0.5rem;">
+                            PDF FILE</div>
                     </div>
                 </div>
 
@@ -1219,8 +1238,10 @@ $stats = [
                     <label>Response</label>
                     <input type="text" name="response" id="editResponse" required>
                 </div>
-                <button type="submit" class="submit-btn" style="width: 100%; margin-bottom: 0.5rem;">Update Knowledge</button>
-                <button type="button" class="submit-btn" style="background: #374151; width: 100%;" onclick="closeModal('knowledgeModal')">Cancel</button>
+                <button type="submit" class="submit-btn" style="width: 100%; margin-bottom: 0.5rem;">Update
+                    Knowledge</button>
+                <button type="button" class="submit-btn" style="background: #374151; width: 100%;"
+                    onclick="closeModal('knowledgeModal')">Cancel</button>
             </form>
         </div>
     </div>
@@ -1238,7 +1259,7 @@ $stats = [
             const img = preview.querySelector('img');
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
-                reader.onload = function(e) {
+                reader.onload = function (e) {
                     img.src = e.target.result;
                     preview.style.display = 'block';
                 }
@@ -1250,7 +1271,7 @@ $stats = [
             const modal = document.getElementById('editModal');
             document.getElementById('editType').value = type;
             document.getElementById('editId').value = data.id;
-            
+
             // Adjust Labels and Inputs
             const titleLabel = document.getElementById('titleLabel');
             const editTitleInput = document.getElementById('editTitleInput');
@@ -1282,7 +1303,7 @@ $stats = [
                 fileLabel.innerText = 'Change File (Optional)';
                 editImageInput.style.display = 'block';
                 editIconInput.style.display = 'none';
-                
+
                 if (data.image_path.toLowerCase().endsWith('.pdf')) {
                     currentImg.style.display = 'none';
                     currentPdf.style.display = 'flex';
@@ -1294,13 +1315,13 @@ $stats = [
                     currentImg.parentElement.style.background = 'transparent';
                 }
             }
-            
+
             // Show/Hide fields based on type
             document.getElementById('bannerFields').style.display = (type === 'banner') ? 'block' : 'none';
             document.getElementById('commonFields').style.display = (type === 'design' || type === 'website' || type === 'certificate') ? 'block' : 'none';
             document.getElementById('websiteFields').style.display = (type === 'website') ? 'block' : 'none';
             document.getElementById('certFields').style.display = (type === 'certificate') ? 'block' : 'none';
-            
+
             if (type === 'banner') document.getElementById('editSubtitleInput').value = data.subtitle;
             if (type === 'design' || type === 'website' || type === 'certificate') document.getElementById('editDescInput').value = data.description;
             if (type === 'website') document.getElementById('editUrlInput').value = data.url;
@@ -1322,11 +1343,12 @@ $stats = [
         }
 
         // Close on click outside
-        window.onclick = function(event) {
+        window.onclick = function (event) {
             if (event.target.classList.contains('modal')) {
                 event.target.style.display = 'none';
             }
         }
     </script>
 </body>
+
 </html>

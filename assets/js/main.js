@@ -100,13 +100,24 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // 7. Back to Top
+    // 7. Back to Top & Section Progress
     const backToTop = document.getElementById('backToTop');
+    const progressBar = document.querySelector('.scroll-progress-bar');
+    
     window.addEventListener('scroll', () => {
+        // Back to Top visibility
         if (window.scrollY > 400) {
             backToTop.classList.add('active');
         } else {
             backToTop.classList.remove('active');
+        }
+
+        // Progress Bar logic
+        const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+        const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+        const scrolled = (winScroll / height) * 100;
+        if (progressBar) {
+            progressBar.style.height = scrolled + "%";
         }
     });
 
@@ -137,22 +148,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const getBotResponse = async (input) => {
             const lowerInput = input.toLowerCase();
-            // Check local knowledge first
+            
+            // 1. PRIMARY: Exact/Phrase match from local Keyword-Response settings
             for (let key in botResponses) {
-                if (lowerInput.includes(key.toLowerCase())) return botResponses[key];
+                if (lowerInput.includes(key.toLowerCase())) {
+                    return botResponses[key];
+                }
             }
 
-            // If no match, use Gemini AI
+            // 2. SECONDARY: Try AI if no local match
             try {
                 const res = await fetch('includes/chat_ai.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ message: input })
                 });
+                
+                if (!res.ok) throw new Error('AI Offline');
                 const data = await res.json();
+                if (data.error || !data.response) throw new Error('AI Error');
+                
                 return data.response;
             } catch (err) {
-                return "Maaf, otak AI saya sedang offline. Silakan coba lagi nanti.";
+                // 3. FALLBACK: Transition to Local Keyword Search if AI fails
+                // Try to find ANY related keyword to help the user
+                let suggestions = [];
+                for (let key in botResponses) {
+                    if (suggestions.length < 3) suggestions.push(`'${key}'`);
+                }
+                
+                return `Maaf, saya sedang dalam mode hemat energi (AI Offline). Namun, saya bisa menjawab jika Anda bertanya tentang: ${suggestions.join(', ')}.`;
             }
         };
 
