@@ -1,9 +1,9 @@
 <?php
 require_once __DIR__ . '/supabase.php';
 
-// Supabase Configuration
-define('SB_PROJECT_REF', 'abrxshzkgshklgmaztlp');
-define('SB_API_KEY', 'sb_secret_A02DrKy_T4HEnAYUFmIuRQ_cvZIoQe8');
+// Supabase Configuration from Environment
+define('SB_PROJECT_REF', getenv('SB_PROJECT_REF') ?: 'abrxshzkgshklgmaztlp');
+define('SB_API_KEY', getenv('SB_API_KEY') ?: '');
 
 $db_path = __DIR__ . '/../database.sqlite';
 

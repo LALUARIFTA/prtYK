@@ -1,0 +1,8 @@
+.env
+database.sqlite
+uploads/
+/scratch/sync_to_supabase.php
+/scratch/update_chatbot.php
+.vscode/
+.gemini/
+php_errors.log
